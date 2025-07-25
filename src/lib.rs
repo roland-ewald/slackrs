@@ -70,7 +70,7 @@ fn filter_and_count_messages(
         .iter()
         .filter(|x| x.channel.contains(channel_pattern) && x.message.contains(message_pattern))
         .collect();
-    print!("Found {} messages matching '{}'.", messages_to_plot.len(), message_pattern);
+    println!("Found {} messages matching '{}'.", messages_to_plot.len(), message_pattern);
     group_messages_by_time(&messages_to_plot, resolution)
 }
 
@@ -90,12 +90,16 @@ fn group_messages_by_time(
         } else if time_label == last_label {
             last_count += 1;
         }
-        if time_label != last_label || index == messages_to_plot.len() - 1 {
+        if time_label != last_label {
             message_counts.push((last_label.clone(), last_count));
             last_count = 1;
             last_label = time_label.clone();
         }
+        if index == messages_to_plot.len() - 1 {
+            message_counts.push((last_label.clone(), last_count));
+        }
     }
+    
     message_counts
 }
 

@@ -45,6 +45,7 @@ pub struct Message {
     thread_ts: Option<String>,
     parent_user_id: Option<String>,
     attachments: Option<Vec<MessageAttachment>>,
+    blocks: Option<Vec<MessageBlock>>,
 }
 impl Message {
     #[cfg(test)]
@@ -62,6 +63,7 @@ impl Message {
             thread_ts: Option::None,
             parent_user_id: Option::None,
             attachments: Option::None,
+            blocks: Option::None,
         }
     }
 
@@ -82,13 +84,15 @@ impl Message {
     pub fn contains(&self, pattern: &str) -> bool {
         if self.text.contains(pattern) {
             return true;
-        } else if let Some(attachments) = &self.attachments {
-            for attachment in attachments {
-                if let Some(text) = &attachment.text {
-                    if text.contains(pattern) {
-                        return true;
-                    }
-                }
+        }
+        for attachment in self.attachments.iter().flatten() {
+            if attachment.contains(pattern) {
+                return true;
+            }
+        }
+        for block in self.blocks.iter().flatten() {
+            if block.contains(pattern) {
+                return true;
             }
         }
         return false;
@@ -101,6 +105,42 @@ impl Message {
 pub struct MessageAttachment {
     id: Option<u64>,
     text: Option<String>,
+}
+impl MessageAttachment {
+    /// Returns true if the attachment text contains the given pattern.
+    pub fn contains(&self, pattern: &str) -> bool {
+        if let Some(text) = &self.text {
+            return text.contains(pattern);
+        }
+        false
+    }
+}
+
+/// Represents a message block, part of a Slack `Message`. Blocks can be nested.
+#[derive(Deserialize, Debug)]
+#[allow(dead_code)]
+pub struct MessageBlock {
+    #[serde(rename = "type")]
+    json_type: String,
+    block_id: Option<String>,
+    text: Option<String>,
+    elements: Option<Vec<MessageBlock>>,
+}
+impl MessageBlock {
+    /// Returns true if block (or any sub-block) contains the given pattern in its text.
+    pub fn contains(&self, pattern: &str) -> bool {
+        if let Some(text) = &self.text {
+            return text.contains(pattern);
+        }
+        if let Some(elements) = &self.elements {
+            for element in elements {
+                if element.contains(pattern) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 
 /// Represents a message in a channel.

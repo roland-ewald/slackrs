@@ -1,11 +1,11 @@
 use csv::Writer;
 use plotters::prelude::*;
 use serde::Deserialize;
-use std::{collections::HashSet, error::Error, fs};
+use std::{collections::HashSet, error::Error, fs, path::PathBuf};
 
 const DEFAULT_IMAGE_DIM: (u32, u32) = (2048, 1024);
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum Metric {
     MentionCount {
         channel_pattern: String,
@@ -18,14 +18,14 @@ pub enum Metric {
     },
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum TimeResolution {
     Daily,
     Monthly,
     Yearly,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct PlotTask {
     pub metric: Metric,
     pub resolution: TimeResolution,
@@ -51,12 +51,21 @@ impl PlotTask {
         }
         BLUE
     }
+    pub fn with_output_dir(&self, output_dir: &PathBuf) -> PlotTask {
+        PlotTask {
+            output_file_name: output_dir.join(&self.output_file_name).to_str().unwrap().to_string(),
+            ..self.clone()
+        }
+    }
 }
 
-pub fn read_tasks_from_file(file_path: &str) -> Result<Vec<PlotTask>, Box<dyn Error>> {
+pub fn read_tasks_from_file(file_path: &str, output_dir: &PathBuf) -> Result<Vec<PlotTask>, Box<dyn Error>> {
     let file_content = fs::read_to_string(file_path)?;
     let tasks: Vec<PlotTask> = serde_json::from_str(&file_content)?;
-    Ok(tasks)
+    let tasks_with_output_dir: Vec<PlotTask> = tasks.iter().map(|task| {
+        task.with_output_dir(output_dir)
+    }).collect();
+    Ok(tasks_with_output_dir)
 }
 
 fn calculate_max_y_axis(message_counts: &Vec<(String, usize)>) -> usize {
@@ -169,11 +178,10 @@ pub fn counter_plot(
         .y_label_style(("sans-serif", 25).into_text_style(&root))
         .draw()?;
 
-    let margin: u32 = (0.2 * ((DEFAULT_IMAGE_DIM.0 as f64 * 0.9) / (labels.len() as f64))) as u32;
     chart
         .draw_series(
             Histogram::vertical(&chart)
-                .margin(margin)
+                .margin(calculate_margin(0.2, labels.len()))
                 .style(task.custom_color(0).filled())
                 .data(
                     labels
@@ -244,7 +252,7 @@ pub fn ratio_plot(
     let root = BitMapBackend::new(&task.output_file_name, DEFAULT_IMAGE_DIM).into_drawing_area();
     root.fill(&WHITE)?;
     let mut chart = ChartBuilder::on(&root)
-        .margin(40)
+        .margin(calculate_margin(0.1, message_counts1.len()))
         .caption(
             format!(
                 "Slack ratio between '{}' and '{}' over time",
@@ -274,6 +282,10 @@ pub fn ratio_plot(
     Ok(())
 }
 
+fn calculate_margin(ratio: f64, num_labels: usize) -> u32 {
+    (ratio * ((DEFAULT_IMAGE_DIM.0 as f64 * 0.9) / (num_labels as f64))) as u32
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -281,7 +293,7 @@ mod tests {
     #[test]
     fn test_read_analysis_tasks_from_file() {
         let file_path = "tests/resources/plot_tasks.json";
-        let tasks = read_tasks_from_file(file_path).expect("Failed to read tasks");
+        let tasks = read_tasks_from_file(file_path, &PathBuf::from("./tests/output")).expect("Failed to read tasks");
 
         assert_eq!(tasks.len(), 2);
         match &tasks[0].metric {
@@ -294,8 +306,8 @@ mod tests {
             }
             _ => panic!("Unexpected metric type"),
         }
-        assert_eq!(tasks[0].resolution, TimeResolution::Monthly);
-        assert_eq!(tasks[0].output_file_name, "group-mentions.png");
+        assert_eq!(tasks[0].resolution, TimeResolution::Daily);
+        assert_eq!(tasks[0].output_file_name, "./tests/output/group-mentions.png");
 
         match &tasks[1].metric {
             Metric::StringMessageCountRatio {
@@ -303,14 +315,14 @@ mod tests {
                 message_pattern1,
                 message_pattern2,
             } => {
-                assert_eq!(channel_pattern, "jobs");
-                assert_eq!(message_pattern1, "'FAILED'");
-                assert_eq!(message_pattern2, "'DONE'");
+                assert_eq!(channel_pattern, "sample");
+                assert_eq!(message_pattern1, "special");
+                assert_eq!(message_pattern2, "message");
             }
             _ => panic!("Unexpected metric type"),
         }
-        assert_eq!(tasks[1].resolution, TimeResolution::Monthly);
-        assert_eq!(tasks[1].output_file_name, "failure-rate.png");
+        assert_eq!(tasks[1].resolution, TimeResolution::Daily);
+        assert_eq!(tasks[1].output_file_name, "./tests/output/sample-rate.png");
     }
 
     #[test]

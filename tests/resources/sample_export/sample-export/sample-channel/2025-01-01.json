@@ -1,0 +1,63 @@
+[
+    {
+        "type": "message",
+        "subtype": "bot_message",
+        "text": "*This is a sample message with content <https:\/\/some.url.dotcom\/path. \n",
+        "ts": "1742888230.346519",
+        "username": "SampleUser",
+        "icons": {
+            "emoji": ":monocle:"
+        },
+        "bot_id": "B0TB0TB0T",
+        "blocks": [
+            {
+                "type": "rich_text",
+                "block_id": "uyof",
+                "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "text": "Sample message ",
+                                "style": {
+                                    "bold": true
+                                }
+                            },
+                            {
+                                "type": "link",
+                                "url": "https:\/\/some.url.dotcom.com\/path?q=3600",
+                                "text": "Sample text that mentions a <!subteam^XXXXXXXXXXX|@group>",
+                                "style": {
+                                    "bold": true
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": ":"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "rich_text_quote",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "text": "This message also mentions user <userhandle>"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "attachments": [
+            {
+                "id": 1,
+                "color": "FF0000",
+                "fallback": "Custom Message",
+                "text": "**Custom message text",
+                "pretext": "Custom Message:"
+            }
+        ]
+    }
+]

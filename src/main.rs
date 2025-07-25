@@ -68,7 +68,7 @@ fn main() {
         );
     } else {
         // Start with reading tasks file, as this is faster and more likely to fail
-        let tasks: Vec<PlotTask> = plot::read_tasks_from_file(args.task_file.to_str().unwrap())
+        let tasks: Vec<PlotTask> = plot::read_tasks_from_file(args.task_file.to_str().unwrap(), &args.output_dir)
         .expect("Failed to read tasks from file");
         println!(
             "Found {} tasks in task file '{:?}'.",

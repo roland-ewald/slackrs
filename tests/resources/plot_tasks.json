@@ -6,18 +6,18 @@
                 "message_pattern": "@group"
             }
         },
-        "resolution": "Monthly",
+        "resolution": "Daily",
         "output_file_name": "group-mentions.png"
     },
     {
         "metric": {
             "StringMessageCountRatio": {
-                "channel_pattern": "jobs",
-                "message_pattern1": "'FAILED'",
-                "message_pattern2": "'DONE'"
+                "channel_pattern": "sample",
+                "message_pattern1": "special",
+                "message_pattern2": "message"
             }
         },
-        "resolution": "Monthly",
-        "output_file_name": "failure-rate.png"
+        "resolution": "Daily",
+        "output_file_name": "sample-rate.png"
     }
 ]
