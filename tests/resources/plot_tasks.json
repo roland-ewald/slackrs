@@ -1,0 +1,23 @@
+[
+    {
+        "metric": {
+            "MentionCount": {
+                "channel_pattern": "",
+                "message_pattern": "@group"
+            }
+        },
+        "resolution": "Monthly",
+        "output_file_name": "group-mentions.png"
+    },
+    {
+        "metric": {
+            "StringMessageCountRatio": {
+                "channel_pattern": "jobs",
+                "message_pattern1": "'FAILED'",
+                "message_pattern2": "'DONE'"
+            }
+        },
+        "resolution": "Monthly",
+        "output_file_name": "failure-rate.png"
+    }
+]
