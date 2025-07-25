@@ -15,6 +15,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Install fontconfig (required by yeslogic-fontconfig-sys)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libfontconfig1-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
