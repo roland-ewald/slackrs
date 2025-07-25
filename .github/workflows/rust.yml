@@ -4,7 +4,6 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -21,7 +20,7 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Run examples
-        run: |
-          for example in examples/*.rs; do
-              cargo run --example $(basename -s .rs $example)
-          done
+      run: |
+        for example in examples/*.rs; do
+          cargo run --example $(basename -s .rs $example)
+        done
