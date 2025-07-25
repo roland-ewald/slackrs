@@ -2,6 +2,11 @@
 name = "slackrs"
 version = "0.1.0"
 edition = "2024"
+license = "Apache-2.0"
+keywords = ["slack", "log-analysis", "plotting"]
+categories = ["command-line-utilities"]
+repository = "https://github.com/roland-ewald/slackrs"
+
 
 [dependencies]
 chrono = "0.4.40"
