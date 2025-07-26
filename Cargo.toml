@@ -3,9 +3,12 @@ name = "slackrs"
 version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
-keywords = ["slack", "log-analysis", "plotting"]
-categories = ["command-line-utilities"]
+keywords = ["chatops", "slack", "log-analysis", "plotting"]
+categories = ["command-line-utilities", "visualization"]
+description = "Provides a CLI and library functions to analyze Slack message data exports (zipped JSONs with a Slack-specific structure) and plot statistics."
+homepage = "https://github.com/roland-ewald/slackrs"
 repository = "https://github.com/roland-ewald/slackrs"
+readme = "README.md"
 
 
 [dependencies]
