@@ -308,6 +308,8 @@ mod tests {
         }
         assert_eq!(tasks[0].resolution, TimeResolution::Daily);
         assert_eq!(tasks[0].output_file_name, "./tests/output/group-mentions.png");
+        assert_eq!(tasks[0].colors, 
+            Some(vec!["#e27505".to_string(), "#55332c".to_string(), "#505050".to_string()]));
 
         match &tasks[1].metric {
             Metric::StringMessageCountRatio {
@@ -323,6 +325,7 @@ mod tests {
         }
         assert_eq!(tasks[1].resolution, TimeResolution::Daily);
         assert_eq!(tasks[1].output_file_name, "./tests/output/sample-rate.png");
+        assert_eq!(tasks[1].colors, None);
     }
 
     #[test]
