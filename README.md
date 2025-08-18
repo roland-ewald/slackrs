@@ -2,6 +2,10 @@
 
 A simple CLI to analyze Slack data exports.
 
+[![Crate](https://img.shields.io/crates/v/slackrs.svg)](https://crates.io/crates/slackrs)
+[![Docs](https://docs.rs/slackrs/badge.svg)](https://docs.rs/slackrs)
+[![Rust](https://github.com/roland-ewald/slackrs/actions/workflows/rust.yml/badge.svg)](https://github.com/roland-ewald/slackrs/actions/workflows/rust.yml)
+
 ## Features
 
 - Plot **number of messages** containing a specific string over time (**histogram**).
