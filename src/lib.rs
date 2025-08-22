@@ -1,4 +1,5 @@
 use plot::{PlotTask, TimeResolution};
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use slack::MessageInChannel;
 use std::{io::Error, result::Result};
 
@@ -12,8 +13,8 @@ pub fn process_tasks(
     tasks: &[PlotTask],
     messages: &[MessageInChannel],
 ) -> Result<(), Error> {
-        for task in tasks {
-            println!("Task: {:?}", task);
+    tasks.par_iter().for_each(|task| {
+        println!("Task: {:?}", task);
             match task.metric {
                 plot::Metric::MentionCount {
                     ref channel_pattern,
@@ -56,7 +57,7 @@ pub fn process_tasks(
                     .expect("Image generation failed.");
                 }
             }
-        }    
+    });
     Ok(())
 }
 
