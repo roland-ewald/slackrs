@@ -14,6 +14,8 @@ A simple CLI to analyze Slack data exports.
 
 - **Export CSV files** with the statistics and allow to aggregate over **different time scales** (daily, monthly, yearly).
 
+- **Export filter-specific CSV files** with all messages matching a pattern (helpful for subsequent analysis).
+
 - **Simple customization** regarding plot colors.
 
 ## Sample usage
@@ -43,7 +45,8 @@ The tool processes all messages from the ZIP and then runs a number of tasks, wh
             }
         },
         "resolution": "Daily",
-        "output_file_name": "daily-group-mentions-over-time.png"
+        "output_file_name": "daily-group-mentions-over-time.png",
+        "msg_output_file_name": "daily-group-mentions-over-time.csv"
     }
 ]    
 ```

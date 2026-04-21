@@ -30,6 +30,7 @@ pub struct PlotTask {
     pub metric: Metric,
     pub resolution: TimeResolution,
     pub output_file_name: String,
+    pub msg_output_file_name: Option<String>,
     pub colors: Option<Vec<String>>,
 }
 impl PlotTask {
@@ -53,18 +54,30 @@ impl PlotTask {
     }
     pub fn with_output_dir(&self, output_dir: &PathBuf) -> PlotTask {
         PlotTask {
-            output_file_name: output_dir.join(&self.output_file_name).to_str().unwrap().to_string(),
+            output_file_name: output_dir
+                .join(&self.output_file_name)
+                .to_str()
+                .unwrap()
+                .to_string(),
+            msg_output_file_name: self
+                .msg_output_file_name
+                .clone()
+                .map(|name| output_dir.join(&name).to_str().unwrap().to_string()),
             ..self.clone()
         }
     }
 }
 
-pub fn read_tasks_from_file(file_path: &str, output_dir: &PathBuf) -> Result<Vec<PlotTask>, Box<dyn Error>> {
+pub fn read_tasks_from_file(
+    file_path: &str,
+    output_dir: &PathBuf,
+) -> Result<Vec<PlotTask>, Box<dyn Error>> {
     let file_content = fs::read_to_string(file_path)?;
     let tasks: Vec<PlotTask> = serde_json::from_str(&file_content)?;
-    let tasks_with_output_dir: Vec<PlotTask> = tasks.iter().map(|task| {
-        task.with_output_dir(output_dir)
-    }).collect();
+    let tasks_with_output_dir: Vec<PlotTask> = tasks
+        .iter()
+        .map(|task| task.with_output_dir(output_dir))
+        .collect();
     Ok(tasks_with_output_dir)
 }
 
@@ -95,7 +108,7 @@ fn calculate_time_series_ratios(
 fn label_set(message_counts: &Vec<(String, usize)>) -> HashSet<String> {
     message_counts
         .iter()
-        .map(|(label, _count)| (label.clone()))
+        .map(|(label, _count)| label.clone())
         .collect()
 }
 
@@ -293,7 +306,8 @@ mod tests {
     #[test]
     fn test_read_analysis_tasks_from_file() {
         let file_path = "tests/resources/plot_tasks.json";
-        let tasks = read_tasks_from_file(file_path, &PathBuf::from("./tests/output")).expect("Failed to read tasks");
+        let tasks = read_tasks_from_file(file_path, &PathBuf::from("./tests/output"))
+            .expect("Failed to read tasks");
 
         assert_eq!(tasks.len(), 2);
         match &tasks[0].metric {
@@ -307,9 +321,18 @@ mod tests {
             _ => panic!("Unexpected metric type"),
         }
         assert_eq!(tasks[0].resolution, TimeResolution::Daily);
-        assert_eq!(tasks[0].output_file_name, "./tests/output/group-mentions.png");
-        assert_eq!(tasks[0].colors, 
-            Some(vec!["#e27505".to_string(), "#55332c".to_string(), "#505050".to_string()]));
+        assert_eq!(
+            tasks[0].output_file_name,
+            "./tests/output/group-mentions.png"
+        );
+        assert_eq!(
+            tasks[0].colors,
+            Some(vec![
+                "#e27505".to_string(),
+                "#55332c".to_string(),
+                "#505050".to_string()
+            ])
+        );
 
         match &tasks[1].metric {
             Metric::StringMessageCountRatio {
