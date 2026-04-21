@@ -1,3 +1,4 @@
+use csv::Writer;
 use plot::{PlotTask, TimeResolution};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use slack::MessageInChannel;
@@ -9,54 +10,54 @@ pub mod slack;
 /// Plotting utilities
 pub mod plot;
 
-pub fn process_tasks(
-    tasks: &[PlotTask],
-    messages: &[MessageInChannel],
-) -> Result<(), Error> {
+pub fn process_tasks(tasks: &[PlotTask], messages: &[MessageInChannel]) -> Result<(), Error> {
     tasks.par_iter().for_each(|task| {
         println!("Task: {:?}", task);
-            match task.metric {
-                plot::Metric::MentionCount {
-                    ref channel_pattern,
-                    ref message_pattern,
-                } => {
-                    let message_counts = filter_and_count_messages(
-                        &messages,
-                        channel_pattern,
-                        message_pattern,
-                        &task.resolution,
-                    );
-                    plot::counter_plot(&task, &message_pattern, &message_counts)
-                        .expect("Image generation failed.");
-                }
-                plot::Metric::StringMessageCountRatio {
-                    ref channel_pattern,
-                    ref message_pattern1,
-                    ref message_pattern2,
-                } => {
-                    let message_counts1 = filter_and_count_messages(
-                        &messages,
-                        channel_pattern,
-                        message_pattern1,
-                        &task.resolution,
-                    );
-                    let message_counts2 = filter_and_count_messages(
-                        &messages,
-                        channel_pattern,
-                        message_pattern2,
-                        &task.resolution,
-                    );
-
-                    plot::ratio_plot(
-                        &task,
-                        &message_pattern1,
-                        &message_counts1,
-                        &message_pattern2,
-                        &message_counts2,
-                    )
+        match task.metric {
+            plot::Metric::MentionCount {
+                ref channel_pattern,
+                ref message_pattern,
+            } => {
+                let message_counts = filter_and_count_messages(
+                    &messages,
+                    channel_pattern,
+                    message_pattern,
+                    &task.resolution,
+                    &task.msg_output_file_name,
+                );
+                plot::counter_plot(&task, &message_pattern, &message_counts)
                     .expect("Image generation failed.");
-                }
             }
+            plot::Metric::StringMessageCountRatio {
+                ref channel_pattern,
+                ref message_pattern1,
+                ref message_pattern2,
+            } => {
+                let message_counts1 = filter_and_count_messages(
+                    &messages,
+                    channel_pattern,
+                    message_pattern1,
+                    &task.resolution,
+                    &task.msg_output_file_name,
+                );
+                let message_counts2 = filter_and_count_messages(
+                    &messages,
+                    channel_pattern,
+                    message_pattern2,
+                    &task.resolution,
+                    &task.msg_output_file_name,
+                );
+
+                plot::ratio_plot(
+                    &task,
+                    &message_pattern1,
+                    &message_counts1,
+                    &message_pattern2,
+                    &message_counts2,
+                )
+                .expect("Image generation failed.");
+            }
+        }
     });
     Ok(())
 }
@@ -66,23 +67,44 @@ fn filter_and_count_messages(
     channel_pattern: &str,
     message_pattern: &str,
     resolution: &TimeResolution,
+    msg_output_file_name: &Option<String>,
 ) -> Vec<(String, usize)> {
     let messages_to_plot: Vec<&MessageInChannel> = messages
         .iter()
         .filter(|x| x.channel.contains(channel_pattern) && x.message.contains(message_pattern))
         .collect();
-    println!("Found {} messages matching '{}'.", messages_to_plot.len(), message_pattern);
-    group_messages_by_time(&messages_to_plot, resolution)
+    println!(
+        "Found {} messages matching '{}'.",
+        messages_to_plot.len(),
+        message_pattern
+    );
+    group_messages_by_time_and_write_to_csv(&messages_to_plot, resolution, msg_output_file_name)
 }
 
-/// Group messages by `TimeResolution` and count them.
-fn group_messages_by_time(
+/// Group messages by `TimeResolution`, count them, optionally export each counted message to a CSV file.
+fn group_messages_by_time_and_write_to_csv(
     messages_to_plot: &Vec<&MessageInChannel>,
     resolution: &TimeResolution,
+    msg_output_file_name: &Option<String>,
 ) -> Vec<(String, usize)> {
     let mut message_counts: Vec<(String, usize)> = Vec::new();
     let mut last_count: usize = 0;
     let mut last_label: String = "".to_string();
+    let mut msg_writer_opt: Option<Writer<std::fs::File>> =
+        if let Some(file_name) = msg_output_file_name {
+            Some(Writer::from_path(file_name).unwrap())
+        } else {
+            None
+        };
+    #[cfg(debug_assertions)]
+    dbg!(format!(
+        "Writing messages to '{}'.",
+        if let Some(file_name) = msg_output_file_name {
+            file_name
+        } else {
+            "N/A"
+        }
+    ));
     for (index, message) in messages_to_plot.iter().enumerate() {
         let time_label = time_by_resolution(message, resolution);
         if index == 0 {
@@ -99,8 +121,17 @@ fn group_messages_by_time(
         if index == messages_to_plot.len() - 1 {
             message_counts.push((last_label.clone(), last_count));
         }
+
+        if let Some(ref mut writer) = msg_writer_opt {
+            writer
+                .serialize((time_label.clone(), message.message.text.clone()))
+                .unwrap();
+        }
     }
-    
+
+    if let Some(ref mut writer) = msg_writer_opt {
+        writer.flush().unwrap();
+    }
     message_counts
 }
 

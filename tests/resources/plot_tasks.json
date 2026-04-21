@@ -8,7 +8,11 @@
         },
         "resolution": "Daily",
         "output_file_name": "group-mentions.png",
-        "colors": ["#e27505", "#55332c", "#505050"]
+        "colors": [
+            "#e27505",
+            "#55332c",
+            "#505050"
+        ]
     },
     {
         "metric": {
@@ -19,6 +23,7 @@
             }
         },
         "resolution": "Daily",
-        "output_file_name": "sample-rate.png"
+        "output_file_name": "sample-rate.png",
+        "msg_output_file_name": "sample-rate.csv"
     }
 ]

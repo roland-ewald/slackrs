@@ -13,5 +13,8 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
+# Cargo-vet config (not yet fine-tuned, so ignored for now)
+supply-chain/*.*
+
 # Don't store decompressed sample data
 tests/resources/sample_export/
